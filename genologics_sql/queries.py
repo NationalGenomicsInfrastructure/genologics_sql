@@ -1,6 +1,10 @@
+"""
+utility functions
+"""
 from genologics_sql.tables import *
 
 from sqlalchemy import text
+
 
 def get_last_modified_projects(session, interval="2 hours"):
     """gets the project objects last modified in the last <interval>
@@ -12,8 +16,9 @@ def get_last_modified_projects(session, interval="2 hours"):
     :returns: List of Project records
 
     """
-    txt="age(now(),lastmodifieddate)< '{int}'::interval".format(int=interval)
+    txt = "age(now(),lastmodifieddate)< '{int}'::interval".format(int=interval)
     return session.query(Project).filter(text(txt)).all()
+
 
 def get_last_modified_project_udfs(session, interval="2 hours"):
     """gets the project objects that have a udf last modified in the last <interval>
@@ -23,9 +28,10 @@ def get_last_modified_project_udfs(session, interval="2 hours"):
     :returns: List of Project records
 
     """
-    query="select pj.* from project pj \
+    query = "select pj.* from project pj \
            inner join entityudfstorage eus on pj.projectid = eus.attachtoid \
-           where eus.attachtoclassid = 83 and age(now(), eus.lastmodifieddate) < '{int}'::interval;".format(int=interval)
+           where eus.attachtoclassid = 83 and age(now(), eus.lastmodifieddate) \
+           < '{int}'::interval;".format(int=interval)
     return session.query(Project).from_statement(text(query)).all()
 
 
@@ -36,11 +42,12 @@ def get_last_modified_project_sample_udfs(session, interval="2 hours"):
     :param interval: str Postgres-compliant time string
     :returns: List of Project records
     """
-    query= "select distinct pj.* from project pj \
+    query = "select distinct pj.* from project pj \
             inner join sample sa on sa.projectid=pj.projectid \
             inner  join processudfstorage pus on sa.processid=pus.processid \
             where age(now(), pus.lastmodifieddate) < '{int}'::interval;".format(int=interval)
     return session.query(Project).from_statement(text(query)).all()
+
 
 def get_last_modified_project_artifacts(session, interval="2 hours"):
     """gets the project objects that have artifacts last modified in the last <interval>
@@ -49,12 +56,13 @@ def get_last_modified_project_artifacts(session, interval="2 hours"):
     :param interval: str Postgres-compliant time string
     :returns: List of Project records
     """
-    query= "select distinct pj.* from project pj \
+    query = "select distinct pj.* from project pj \
             inner join sample sa on sa.projectid=pj.projectid \
             inner join artifact_sample_map asm on sa.processid=asm.processid \
             inner join artifact art on asm.artifactid=art.artifactid \
             where age(now(), art.lastmodifieddate) < '{int}'::interval;".format(int=interval)
     return session.query(Project).from_statement(text(query)).all()
+
 
 def get_last_modified_project_artifact_udfs(session, interval="2 hours"):
     """gets the project objects that have artifact udfs last modified in the last <interval>
@@ -63,12 +71,13 @@ def get_last_modified_project_artifact_udfs(session, interval="2 hours"):
     :param interval: str Postgres-compliant time string
     :returns: List of Project records
     """
-    query= "select distinct pj.* from project pj \
+    query = "select distinct pj.* from project pj \
             inner join sample sa on sa.projectid=pj.projectid \
             inner join artifact_sample_map asm on sa.processid=asm.processid \
             inner join artifactudfstorage aus on asm.artifactid=aus.artifactid \
             where age(now(), aus.lastmodifieddate) < '{int}'::interval;".format(int=interval)
     return session.query(Project).from_statement(text(query)).all()
+
 
 def get_last_modified_project_containers(session, interval="2 hours"):
     """gets the project objects that have containers last modified in the last <interval>
@@ -77,13 +86,14 @@ def get_last_modified_project_containers(session, interval="2 hours"):
     :param interval: str Postgres-compliant time string
     :returns: List of Project records
     """
-    query= "select distinct pj.* from project pj \
+    query = "select distinct pj.* from project pj \
             inner join sample sa on sa.projectid=pj.projectid \
             inner join artifact_sample_map asm on sa.processid=asm.processid \
             inner join containerplacement cpl on asm.artifactid=cpl.processartifactid \
             inner join container ct on cpl.containerid=ct.containerid \
             where age(ct.lastmodifieddate) < '{int}'::interval;".format(int=interval)
     return session.query(Project).from_statement(text(query)).all()
+
 
 def get_last_modified_project_processes(session, interval="2 hours"):
     """gets the project objects that have containers last modified in the last <interval>
@@ -92,13 +102,14 @@ def get_last_modified_project_processes(session, interval="2 hours"):
     :param interval: str Postgres-compliant time string
     :returns: List of Project records
     """
-    query= "select distinct pj.* from project pj \
+    query = "select distinct pj.* from project pj \
             inner join sample sa on sa.projectid=pj.projectid \
             inner join artifact_sample_map asm on sa.processid=asm.processid \
             inner join processiotracker pit on asm.artifactid=pit.inputartifactid \
             inner join process pro on pit.processid=pro.processid \
             where age(now(), pro.lastmodifieddate) < '{int}'::interval;".format(int=interval)
     return session.query(Project).from_statement(text(query)).all()
+
 
 def get_last_modified_project_process_udfs(session, interval="2 hours"):
     """gets the project objects that have containers last modified in the last <interval>
@@ -107,7 +118,7 @@ def get_last_modified_project_process_udfs(session, interval="2 hours"):
     :param interval: str Postgres-compliant time string
     :returns: List of Project records
     """
-    query= "select distinct pj.* from project pj \
+    query = "select distinct pj.* from project pj \
             inner join sample sa on sa.projectid=pj.projectid \
             inner join artifact_sample_map asm on sa.processid=asm.processid \
             inner join processiotracker pit on asm.artifactid=pit.inputartifactid \
@@ -124,7 +135,7 @@ def get_last_modified_projectids(session, interval="2 hours"):
     :param interval: str Postgres-compliant time string
     :returns: List of Project records
     """
-    projectids=set()
+    projectids = set()
     for project in get_last_modified_projects(session, interval):
         projectids.add(project.luid)
 
@@ -155,17 +166,19 @@ def get_last_modified_processes(session, ptypes, interval="24 hours"):
     :param interval: the postgres compliant interval of time to search processes in.
 
     """
-    query= "select distinct pro.* from process pro \
+    query = "select distinct pro.* from process pro \
             inner join processudfstorage pus on pro.processid=pus.processid \
             where (pro.typeid in ({typelist}) \
             and age(now(), pus.lastmodifieddate) < '{int}'::interval) \
             or \
             (age(now(), pro.lastmodifieddate) < '{int}'::interval \
-            and pro.typeid in ({typelist}));".format(int=interval, typelist=",".join([str(x) for x in ptypes]))
+            and pro.typeid in ({typelist}));".format(int=interval,
+                                                     typelist=",".join([str(x) for x in ptypes]))
     return session.query(Process).from_statement(text(query)).all()
 
+
 def get_processes_in_history(session, parent_process, ptypes, sample=None):
-    """returns wll the processes that are found in the history of parent_process 
+    """returns wll the processes that are found in the history of parent_process
     AND are of type ptypes
 
     :param session: the current SQLAlchemy session to the db
@@ -174,7 +187,7 @@ def get_processes_in_history(session, parent_process, ptypes, sample=None):
     :param sample: if defined, filter artifacts that match the correct sample
 
     """
-    qar=["select distinct pro.* from process pro \
+    qar = ["select distinct pro.* from process pro \
             inner join processiotracker pio on pio.processid=pro.processid \
             inner join outputmapping om on om.trackerid=pio.trackerid \
             inner join artifact_ancestor_map aam on pio.inputartifactid=aam.ancestorartifactid\
@@ -185,12 +198,13 @@ def get_processes_in_history(session, parent_process, ptypes, sample=None):
     qar.append("where pro2.processid={parent} and pro.typeid in ({typelist}) ")
     if sample:
         qar.append("and asm.processid = {sampleid}".format(sampleid=sample))
-    qar.append(";") 
-    query=''.join(qar).format(parent=parent_process, typelist=",".join([str(x) for x in ptypes]))
+    qar.append(";")
+    query = ''.join(qar).format(parent=parent_process, typelist=",".join([str(x) for x in ptypes]))
     return session.query(Process).from_statement(text(query)).all()
 
+
 def get_children_processes(session, parent_process, ptypes, sample=None, orderby=None):
-    """returns wll the processes that are found in the children of parent_process 
+    """returns all the processes that are found in the children of parent_process
     AND are of type ptypes
 
     :param session: the current SQLAlchemy session to the db
@@ -199,13 +213,13 @@ def get_children_processes(session, parent_process, ptypes, sample=None, orderby
 
     """
 
-    qar1=[   """select pro.* from process pro 
-            inner join processiotracker piot on piot.processid=pro.processid 
-            inner join artifact_ancestor_map aam on aam.artifactid=piot.inputartifactid 
+    qar1 = ["""select pro.* from process pro
+            inner join processiotracker piot on piot.processid=pro.processid
+            inner join artifact_ancestor_map aam on aam.artifactid=piot.inputartifactid
             inner join outputmapping om on aam.ancestorartifactid=om.outputartifactid
             inner join processiotracker piot2 on piot2.trackerid=om.trackerid """]
-    qar2=[  """select pro.* from process pro 
-            inner join processiotracker piot on piot.processid=pro.processid 
+    qar2 = ["""select pro.* from process pro
+            inner join processiotracker piot on piot.processid=pro.processid
             inner join outputmapping om on piot.inputartifactid=om.outputartifactid
             inner join processiotracker piot2 on piot2.trackerid=om.trackerid """]
     if sample:
@@ -219,5 +233,23 @@ def get_children_processes(session, parent_process, ptypes, sample=None, orderby
     if orderby:
         qar2.append("order by {}".format(orderby))
 
-    query="{} union {};".format(''.join(qar1), ''.join(qar2)).format(parent=parent_process, typelist=",".join([str(x) for x in ptypes]))
+    query = "{} union {};".format(''.join(qar1), ''.join(qar2)).format(
+        parent=parent_process, typelist=",".join([str(x) for x in ptypes]))
     return session.query(Process).from_statement(text(query)).all()
+
+
+def get_reanalysis_old_sample_name(session, sample_name):
+    """TODO: Docstring for get_reanalysis_old_sample_name.
+
+    :session: the current SQLAlchemy session to the db
+    :sample_name: new sample id with a different last 2 digits
+    :returns: List of Tuple of sample name and project name where sample names matches first 9
+              digits of sample_name
+
+    """
+    first9digits = str(sample_name)[:9]
+
+    old_samples = session.query(Sample.name, Project.name).join(Project).filter(
+        Sample.name.like('%' + first9digits + '%'), Sample.name != sample_name).all()
+
+    return old_samples
