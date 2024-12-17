@@ -256,7 +256,7 @@ def get_all_samples_in_a_workflow(session, workflow):
                 labworkflow lwf, artifact_sample_map asm, sample sa \
               where st.stageid=stg.stageid and stg.membershipid=wfs.sectionid \
               and wfs.workflowid=lwf.workflowid and wfs.protocolid=lpt.protocolid \
-              and st.artifactid=asm.artifactid and asm.processid=sa.processid and st.completedbyid is null \
+              and st.artifactid=asm.artifactid and asm.processid=sa.processid and st.workflowrunid > 0 \
               and lwf.workflowstatus='ACTIVE' and lwf.workflowname='{workflow}';"
 
     return session.execute(text(query)).all()
@@ -331,5 +331,34 @@ def get_reagentlabel_for_sample(session, sampleid):
               from reagentlabel rl, artifact_label_map alm, sample sa, artifact art \
               where alm.labelid=rl.labelid and art.artifactid=alm.artifactid \
               and sa.name=art.name and sa.sampleid={sampleid};"
+
+    return session.execute(text(query)).all()
+
+
+def get_currentsteps_protocol_for_sample(session, sampleid):
+    """returns the current protocolstep and protocol for a sample
+
+    :param session: the current SQLAlchemy session to the db
+    :param sampleid: sampleid from sample table
+    :returns: all protocolstep ids a sample is in
+    """
+    query = f"select distinct(sc.stepid) \
+              from samplecheckout sc, artifact_sample_map asm, sample sa, stagetransition st \
+              where sc.artifactid=asm.artifactid and asm.processid=sa.processid and asm.artifactid=st.artifactid \
+              and st.workflowrunid>0 and sa.sampleid={sampleid};"
+
+    return session.execute(text(query)).all()
+
+
+def get_protocolstep_details(session, stepid):
+    """returns the name of the protocolstep
+
+    :param session: the current SQLAlchemy session to the db
+    :param stepid: the id of the protocolstep
+    :returns: protocolstep name
+    """
+    query = f"select ps.name, lp.protocolname, lp.qcprotocol \
+              from protocolstep ps, labprotocol lp \
+              where ps.protocolid=lp.protocolid and ps.stepid={stepid};"
 
     return session.execute(text(query)).all()

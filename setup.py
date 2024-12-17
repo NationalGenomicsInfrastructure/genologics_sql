@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-import sys, os
+import os
 import subprocess
 import glob
 
@@ -44,7 +44,7 @@ setup(name='genologics_sql',
       author_email='milui.galithil@gmail.com',
       maintainer='Denis Moreno',
       maintainer_email='denis.moreno@scilifelab.se',
-      url='https://github.com/SciLifeLab/genologics_sql',
+      url='https://github.com/NationalGenomicsInfrastructure/genologics_sql',
       license='MIT',
       packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
       scripts=glob.glob("scripts/*.py"),
